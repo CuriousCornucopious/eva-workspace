@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thrift Flip Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        input[type="number"], select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="number"]:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .platform-fees {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .fee-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .fee-row:last-child {
+            margin-bottom: 0;
+        }
+        
+        .fee-label {
+            color: #666;
+        }
+        
+        .fee-value {
+            color: #333;
+            font-weight: 600;
+        }
+        
+        .results {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 25px;
+        }
+        
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        .result-row:last-child {
+            margin-bottom: 0;
+            padding-top: 15px;
+            border-top: 2px solid rgba(255,255,255,0.3);
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .profit-positive {
+            color: #90EE90;
+        }
+        
+        .profit-negative {
+            color: #FFB6C1;
+        }
+        
+        .tips {
+            margin-top: 25px;
+            padding: 20px;
+            background: #fff3cd;
+            border-radius: 10px;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .tips h3 {
+            color: #856404;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .tips ul {
+            color: #856404;
+            padding-left: 20px;
+            font-size: 14px;
+        }
+        
+        .tips li {
+            margin-bottom: 5px;
+        }
+        
+        .reset-btn {
+            width: 100%;
+            padding: 15px;
+            margin-top: 20px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .reset-btn:hover {
+            background: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛒 Thrift Flip Calculator</h1>
+        <p class="subtitle">Know your profit before you buy</p>
+        
+        <div class="input-group">
+            <label for="cost">Item Cost ($)</label>
+            <input type="number" id="cost" placeholder="5.00" step="0.01" onchange="calculate()">
+        </div>
+        
+        <div class="input-group">
+            <label for="sellPrice">Selling Price ($)</label>
+            <input type="number" id="sellPrice" placeholder="45.00" step="0.01" onchange="calculate()">
+        </div>
+        
+        <div class="input-group">
+            <label for="platform">Selling Platform</label>
+            <select id="platform" onchange="calculate()">
+                <option value="ebay">eBay</option>
+                <option value="facebook">Facebook Marketplace</option>
+                <option value="etsy">Etsy</option>
+                <option value="poshmark">Poshmark</option>
+                <option value="mercari">Mercari</option>
+            </select>
+        </div>
+        
+        <div class="input-group">
+            <label for="shipping">Shipping Cost ($) - if you pay it</label>
+            <input type="number" id="shipping" placeholder="0.00" step="0.01" onchange="calculate()">
+        </div>
+        
+        <div class="input-group">
+            <label for="materials">Materials/Cleaning Cost ($)</label>
+            <input type="number" id="materials" placeholder="0.00" step="0.01" onchange="calculate()">
+        </div>
+        
+        <div class="platform-fees">
+            <div class="fee-row">
+                <span class="fee-label">Platform Fee:</span>
+                <span class="fee-value" id="platformFeePercent">13%</span>
+            </div>
+            <div class="fee-row">
+                <span class="fee-label">Payment Processing:</span>
+                <span class="fee-value" id="paymentFeePercent">2.9% + $0.30</span>
+            </div>
+        </div>
+        
+        <div class="results">
+            <div class="result-row">
+                <span>Revenue:</span>
+                <span id="revenue">$0.00</span>
+            </div>
+            <div class="result-row">
+                <span>Platform Fees:</span>
+                <span id="platformFees">-$0.00</span>
+            </div>
+            <div class="result-row">
+                <span>Payment Fees:</span>
+                <span id="paymentFees">-$0.00</span>
+            </div>
+            <div class="result-row">
+                <span>Shipping:</span>
+                <span id="shippingCost">-$0.00</span>
+            </div>
+            <div class="result-row">
+                <span>Materials:</span>
+                <span id="materialsCost">-$0.00</span>
+            </div>
+            <div class="result-row">
+                <span>Item Cost:</span>
+                <span id="itemCost">-$0.00</span>
+            </div>
+            <div class="result-row">
+                <span>NET PROFIT:</span>
+                <span id="netProfit">$0.00</span>
+            </div>
+        </div>
+        
+        <div class="tips" id="tips" style="display: none;">
+            <h3>💡 Tips</h3>
+            <ul id="tipsList">
+            </ul>
+        </div>
+        
+        <button class="reset-btn" onclick="reset()">Reset Calculator</button>
+    </div>
+
+    <script>
+        const platformRates = {
+            ebay: { platform: 0.13, payment: 0.029, paymentFixed: 0.30 },
+            facebook: { platform: 0.05, payment: 0.029, paymentFixed: 0.30 },
+            etsy: { platform: 0.065, payment: 0.03, paymentFixed: 0.25 },
+            poshmark: { platform: 0.20, payment: 0, paymentFixed: 0 },
+            mercari: { platform: 0.10, payment: 0.029, paymentFixed: 0.30 }
+        };
+
+        function calculate() {
+            const cost = parseFloat(document.getElementById('cost').value) || 0;
+            const sellPrice = parseFloat(document.getElementById('sellPrice').value) || 0;
+            const platform = document.getElementById('platform').value;
+            const shipping = parseFloat(document.getElementById('shipping').value) || 0;
+            const materials = parseFloat(document.getElementById('materials').value) || 0;
+            
+            const rates = platformRates[platform];
+            
+            // Update fee display
+            document.getElementById('platformFeePercent').textContent = (rates.platform * 100) + '%';
+            if (rates.payment > 0) {
+                document.getElementById('paymentFeePercent').textContent = (rates.payment * 100) + '% + $' + rates.paymentFixed.toFixed(2);
+            } else {
+                document.getElementById('paymentFeePercent').textContent = 'Included';
+            }
+            
+            // Calculate fees
+            const platformFees = sellPrice * rates.platform;
+            const paymentFees = (sellPrice * rates.payment) + (sellPrice > 0 ? rates.paymentFixed : 0);
+            
+            // Calculate profit
+            const totalFees = platformFees + paymentFees;
+            const netProfit = sellPrice - totalFees - shipping - materials - cost;
+            
+            // Update display
+            document.getElementById('revenue').textContent = '$' + sellPrice.toFixed(2);
+            document.getElementById('platformFees').textContent = '-$' + platformFees.toFixed(2);
+            document.getElementById('paymentFees').textContent = '-$' + paymentFees.toFixed(2);
+            document.getElementById('shippingCost').textContent = '-$' + shipping.toFixed(2);
+            document.getElementById('materialsCost').textContent = '-$' + materials.toFixed(2);
+            document.getElementById('itemCost').textContent = '-$' + cost.toFixed(2);
+            
+            const profitElement = document.getElementById('netProfit');
+            profitElement.textContent = '$' + netProfit.toFixed(2);
+            profitElement.className = netProfit >= 0 ? 'profit-positive' : 'profit-negative';
+            
+            // Show tips
+            showTips(cost, sellPrice, netProfit, platform);
+        }
+        
+        function showTips(cost, sellPrice, profit, platform) {
+            const tipsDiv = document.getElementById('tips');
+            const tipsList = document.getElementById('tipsList');
+            tipsList.innerHTML = '';
+            
+            const tips = [];
+            
+            if (cost === 0 && sellPrice === 0) {
+                tipsDiv.style.display = 'none';
+                return;
+            }
+            
+            if (profit < 0) {
+                tips.push('This flip would LOSE money. Skip it or negotiate the price down.');
+            } else if (profit < 10) {
+                tips.push('Low profit margin. Make sure it\'s worth your time.');
+            } else if (profit > 50) {
+                tips.push('Great profit potential! This is a solid flip.');
+            }
+            
+            if (sellPrice > 0 && cost / sellPrice > 0.5) {
+                tips.push('Your cost is more than 50% of selling price. Risky flip.');
+            }
+            
+            if (platform === 'poshmark' && sellPrice > 0) {
+                tips.push('Poshmark takes 20% but handles shipping labels for items over $15.');
+            }
+            
+            if (platform === 'facebook' && sellPrice > 0) {
+                tips.push('Facebook has lowest fees but requires local meetup or managing shipping yourself.');
+            }
+            
+            if (tips.length > 0) {
+                tips.forEach(tip => {
+                    const li = document.createElement('li');
+                    li.textContent = tip;
+                    tipsList.appendChild(li);
+                });
+                tipsDiv.style.display = 'block';
+            } else {
+                tipsDiv.style.display = 'none';
+            }
+        }
+        
+        function reset() {
+            document.getElementById('cost').value = '';
+            document.getElementById('sellPrice').value = '';
+            document.getElementById('platform').value = 'ebay';
+            document.getElementById('shipping').value = '';
+            document.getElementById('materials').value = '';
+            document.getElementById('tips').style.display = 'none';
+            calculate();
+        }
+        
+        // Initialize
+        calculate();
+    </script>
+</body>
+</html>
